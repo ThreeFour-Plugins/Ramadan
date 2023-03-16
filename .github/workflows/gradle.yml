@@ -19,6 +19,8 @@ jobs:
           distribution: 'adopt'
           architecture: 'x64'
           java-home: ${{ env.JAVA_HOME }}
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew build --no-daemon
 
