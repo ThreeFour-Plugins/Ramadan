@@ -30,12 +30,3 @@ jobs:
           python-version: '3.x'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Plugin
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: "build/libs/Ramadan-1.0.0.jar"
-          asset_name: "Ramadan-1.0.0.jar"
-          asset_content_type: "application/java-archive"
-          token: ${{ secrets.GITHUB_TOKEN }}
