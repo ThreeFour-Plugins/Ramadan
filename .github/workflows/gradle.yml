@@ -1,14 +1,29 @@
-name: Build Ramadan Plugin
-on: push
+name: Build and Upload Plugin
+
+on:
+  push:
+    branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
-        with:
-          java-version: 17
-      - name: Build plugin
-        run: ./gradlew build
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup JDK 17
+      uses: actions/setup-java@v2
+      with:
+        java-version: 17
+
+    - name: Build Plugin
+      run: ./gradlew build
+
+    - name: Upload Plugin
+      uses: actions/upload-release-asset@v1
+      with:
+        name: "Ramadan-1.0.0.jar"
+        path: "build/libs/"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        url: ${{ env.RELEASE_URL }}
