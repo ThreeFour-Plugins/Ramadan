@@ -2,31 +2,47 @@ name: Build and Upload Plugin
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Setup JDK 17
-      uses: actions/setup-java@v2
-      with:
-        java-version: 17
-        distribution: 'adopt'
-    - name: Grant executable permissions to gradlew
-      run: chmod +x gradlew
+      - name: Setup JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: 17
+          distribution: 'adopt'
 
-    - name: Build Plugin
-      run: ./gradlew build
+      - name: Build Plugin
+        run: ./gradlew build
 
-    - name: Upload Plugin
-      uses: actions/upload-release-asset@v1
-      with:
-        name: "Ramadan-1.0.0.jar"
-        path: "build/libs/"
-        token: ${{ secrets.GITHUB_TOKEN }}
-        url: ${{ env.RELEASE_URL }}
+      - name: Set up Git
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+
+      - name: Upload Plugin
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "build/libs/Ramadan-1.0.0.jar"
+          asset_name: "Ramadan-1.0.0.jar"
+          asset_content_type: "application/java-archive"
+          token: ${{ secrets.GITHUB_TOKEN }}
