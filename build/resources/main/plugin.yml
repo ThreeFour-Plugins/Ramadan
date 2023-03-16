@@ -1,0 +1,67 @@
+name: Ramadan
+version: '1.0-SNAPSHOT'
+main: me.threefour.ramadan.Ramadan
+api-version: 1.19
+commands:
+  ramadan:
+    description: Main command for Ramadan plugin
+    usage: /ramadan <subcommand> [arguments]
+    aliases: [ram]
+    permission: ramadan.main
+    subcommands:
+      reload:
+        description: Reloads the plugin configuration
+        usage: /ramadan reload
+        permission: ramadan.reload
+  createparty:
+    description: Creates a new Iftar Party
+    usage: /createparty <party name>
+    permission: ramadan.createparty
+    permission-message: You do not have permission to use this command
+    executor: me.threefour.ramadan.commands.CreatePartyCommand
+  joinparty:
+    description: Joins an existing Iftar Party
+    usage: /joinparty <party name>
+    permission: ramadan.joinparty
+    permission-message: You do not have permission to use this command
+    executor: me.threefour.ramadan.commands.JoinPartyCommand
+  donate:
+    description: Donate to support the plugin
+    usage: /donate
+    permission: ramadan.donate
+    executor: me.threefour.ramadan.commands.DonateCommand
+  party:
+      description: Manages Iftar Parties
+      usage: /party <subcommand> [arguments]
+      permission: ramadan.party
+      permission-message: You do not have permission to use this command
+      aliases: [ iftarparty ]
+      subcommands:
+        create:
+          description: Creates a new Iftar Party
+          usage: /party create <party name>
+          permission: ramadan.party.create
+          permission-message: You do not have permission to create an Iftar Party
+          executor: me.threefour.ramadan.commands.CreatePartyCommand
+        join:
+          description: Joins an existing Iftar Party
+          usage: /party join <party name>
+          permission: ramadan.party.join
+          permission-message: You do not have permission to join an Iftar Party
+          executor: me.threefour.ramadan.commands.JoinPartyCommand
+        leave:
+          description: Leaves the current Iftar Party
+          usage: /party leave
+          permission: ramadan.party.leave
+          permission-message: You do not have permission to leave an Iftar Party
+          executor: me.threefour.ramadan.commands.LeavePartyCommand
+        info:
+          description: Displays information about the current Iftar Party
+          usage: /party info
+          permission: ramadan.party.info
+          permission-message: You do not have permission to view Iftar Party information
+          executor: me.threefour.ramadan.commands.PartyInfoCommand
+
+listeners:
+  - me.threefour.ramadan.listeners.PlayerChatListener
+softdepend: [ PlaceholderAPI ]
