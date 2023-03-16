@@ -30,8 +30,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Set up Git
-        uses: github.com/actions/setup-git@v2
+        run: |
+          git config --global user.name "Three Four"
+          git config --global user.email "threefourcontact@gmail.com"
 
       - name: Create Release
         id: create_release
