@@ -8,11 +8,14 @@ jobs:
       - checkout
       - run: echo "java.runtime.version=17" >> gradle.properties
       - run:
+          name: Grant Permssion
+          command: chmod +x gradlew
+      - run:
           name: Build plugin
           command: ./gradlew build
       - store_artifacts:
           path: build/libs/
-          destination: Ramadan-1.0.2.jar
+          destination: Ramadan-1.0.2
 
 workflows:
   version: 2
