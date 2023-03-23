@@ -1,4 +1,4 @@
-# Ramadan Minecraft Plugin
+# Ramadan Plugin
 
 A plugin that brings the spirit of Ramadan to Minecraft.
 
