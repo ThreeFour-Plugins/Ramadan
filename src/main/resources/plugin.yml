@@ -2,5 +2,42 @@ name: Ramadan
 version: '${version}'
 main: me.threefour.ramadan.Ramadan
 api-version: 1.19
-authors: [ThreeFour]
+authors: [ ThreeFour ]
 description: A Ramadan In Minecraft Plugin
+commands:
+  quest:
+    description: "View available quests or complete a quest."
+    usage: "/quest [quest name]"
+    permission: ramadan.quest
+    permission-message: "You do not have permission to use this command."
+    executor: me.threefour.ramadan.commands.QuestCommand
+  stopfasting:
+    description: Stops the player's fasting
+    usage: /stopfasting
+    permission: ramadan.stopfasting
+    aliases: [ stopfast, sf ]
+  iftar:
+    description: Set, teleport to, or get the location of the Iftar table
+    usage: /iftar <set|tp|get>
+    permission: ramadan.iftar
+    permission-message: "You do not have permission to use this command."
+    aliases: [ iftartable ]
+  reload:
+    description: Reload the configuration files for the plugin
+    usage: /ramadan reload
+    permission: ramadan.reload
+    permission-message: "You do not have permission to use this command."
+  ramadan:
+    description: "Main command for the Ramadan plugin"
+    usage: "/ramadan <subcommand>"
+    permission: ramadan.reload
+    permission-message: "You do not have permission to use this command."
+    executor: me.threefour.ramadan.commands.MainCommand
+    subcommands:
+      reload:
+        description: "Reload the configuration files for the plugin"
+        usage: "/ramadan reload [config|messages]"
+        permission: ramadan.reload
+        permission-message: "You do not have permission to use this command."
+        executor: me.threefour.ramadan.commands.ReloadCommand
+softdepend: [PlaceholderAPI]

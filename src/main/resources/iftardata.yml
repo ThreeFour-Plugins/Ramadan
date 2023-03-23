@@ -1,0 +1,16 @@
+iftar-locations:
+  'istanbul':
+    world: 'world'
+    x: 100.0
+    y: 64.0
+    z: -200.0
+  'cairo':
+    world: 'world'
+    x: -300.0
+    y: 70.0
+    z: 500.0
+  'karachi':
+    world: 'world'
+    x: 0.0
+    y: 100.0
+    z: 0.0
