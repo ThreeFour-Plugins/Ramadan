@@ -1,0 +1,6 @@
+name: Ramadan
+version: '${version}'
+main: me.threefour.ramadan.Ramadan
+api-version: 1.19
+authors: [ThreeFour]
+description: A Ramadan In Minecraft Plugin
