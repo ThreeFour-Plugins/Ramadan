@@ -27,7 +27,8 @@ public class IftarLocationListener implements Listener {
             return;
         }
 
-        Location iftarLocation = plugin.getIftarLocation();
+        String name = "";
+        Location iftarLocation = plugin.getIftarLocation(name);
         if (iftarLocation != null && toLocation.distanceSquared(iftarLocation) <= 1) {
             player.sendMessage(ChatColor.GOLD + "Welcome to the Iftar location!");
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
@@ -37,7 +38,8 @@ public class IftarLocationListener implements Listener {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        Location iftarLocation = plugin.getIftarLocation();
+        String name = "";
+        Location iftarLocation = plugin.getIftarLocation(name);
         if (iftarLocation != null && event.getClickedBlock() != null && event.getClickedBlock().getLocation().equals(iftarLocation)) {
             player.sendMessage(ChatColor.GOLD + "This is the Iftar location!");
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);

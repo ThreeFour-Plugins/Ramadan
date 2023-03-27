@@ -15,6 +15,7 @@ public class QuestListener implements Listener {
     private Ramadan plugin;
 
     public QuestListener(Ramadan ramadan) {
+        this.plugin = ramadan;
     }
 
     @EventHandler

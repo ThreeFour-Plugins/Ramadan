@@ -13,6 +13,9 @@ import me.threefour.ramadan.update.GithubUpdate;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -26,15 +29,16 @@ import java.util.*;
 
 public final class Ramadan extends JavaPlugin {
 
-    private boolean enabled;
+    private boolean enabled = false;
     private BukkitTask resetFastingTask;
+    private FastingEvent fastingEvent;
+
     @Override
     public void onEnable() {
         if (enabled) {
             getLogger().warning("Plugin is already enabled!");
             return;
         }
-        // Set enabled to true to indicate that the plugin is running
         enabled = true;
 
         // Initialize update checker
@@ -63,29 +67,38 @@ public final class Ramadan extends JavaPlugin {
 
         // Register commands
         try {
-            Objects.requireNonNull(getCommand("quest")).setExecutor(new QuestCommand());
+            Objects.requireNonNull(getCommand("quest")).setExecutor(new QuestCommand(this));
         } catch (NullPointerException e) {
             getLogger().warning("Failed to register quest command: " + e.getMessage());
         } catch (IOException e) {
-            getLogger().warning("Failed to create QuestCommand instance: " + e.getMessage());
+            throw new RuntimeException(e);
+        } catch (InvalidConfigurationException e) {
+            throw new RuntimeException(e);
         }
-        getCommand("iftar").setExecutor(new IftarTableCommand());
-        getCommand("iftar").setTabCompleter(new IftarTableCommand());
-        FastingEvent fastingEvent = new FastingEvent(this);
+        PluginCommand iftarCommand = getCommand("iftar");
+        if (iftarCommand != null) {
+            iftarCommand.setExecutor(new IftarTableCommand(this));
+            iftarCommand.setTabCompleter(new IftarTableCommand(this));
+        } else {
+            getLogger().severe("Could not find iftar command!");
+        }
+        fastingEvent = new FastingEvent(this);
         getCommand("stopfasting").setExecutor(new StopFastingCommand(fastingEvent));
-        Objects.requireNonNull(getCommand("ramadan")).setExecutor(new ReloadCommand(this));
+        PluginCommand reloadCommand = getCommand("ramadan");
+        if (reloadCommand != null) {
+            reloadCommand.setExecutor(new ReloadCommand(this));
+        } else {
+            getLogger().severe("Could not find reload command!");
+        }
 
         // Register events
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new IftarLocationListener(this), this);
         pm.registerEvents(new QuestListener(this), this);
-        pm.registerEvents(new FastingEvent(this), this);
+        pm.registerEvents(fastingEvent, this);
         if (pm.getPlugin("PlaceholderAPI") != null) {
             new Placeholders(this).register();
         }
-
-        // Initialize FastingEvent
-        fastingEvent = new FastingEvent(this);
 
         // Start fasting
         fastingEvent.startFasting();
@@ -118,6 +131,7 @@ public final class Ramadan extends JavaPlugin {
         }
         return completedQuests;
     }
+
     public ResourceBundle getQuestRewards() {
         FileConfiguration config = this.getConfig();
         if (!config.contains("quests")) {
@@ -137,61 +151,64 @@ public final class Ramadan extends JavaPlugin {
         };
     }
 
-    public void setIftarLocation(Location location) {
-        File file = new File(this.getDataFolder(), "iftardata.yml");
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-        String worldName = config.getString("iftar_location.world");
-        config.set("iftar_location.world", location.getWorld().getName());
-        config.set("iftar_location.x", location.getX());
-        config.set("iftar_location.y", location.getY());
-        config.set("iftar_location.z", location.getZ());
-        config.set("iftar-location.yaw", location.getYaw());
-        config.set("iftar-location.pitch", location.getPitch());
-
-        try {
-            config.save(file);
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void setIftarLocation(String name, Location location) {
+        FileConfiguration config = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "iftardata.yml"));
+        if (config != null) {
+            ConfigurationSection iftarLocations = config.getConfigurationSection("iftar-locations");
+            if (iftarLocations != null) {
+                iftarLocations.set(name, location.serialize());
+                try {
+                    config.save(new File(getDataFolder(), "iftardata.yml"));
+                } catch (IOException e) {
+                    getLogger().warning("Failed to save iftar location: " + e.getMessage());
+                }
+            }
         }
     }
-    public void teleportToIftarLocation(Player player) {
-        FileConfiguration config = getConfig();
-        if (config.contains("iftar-location")) {
-            String worldName = config.getString("iftar-location.world");
-            if (worldName != null) { // Add null check
-                double x = config.getDouble("iftar-location.x");
-                double y = config.getDouble("iftar-location.y");
-                double z = config.getDouble("iftar-location.z");
-                float yaw = (float) config.getDouble("iftar-location.yaw");
-                float pitch = (float) config.getDouble("iftar-location.pitch");
-                World world = getServer().getWorld(worldName);
-                if (world != null) {
-                    Location location = new Location(world, x, y, z, yaw, pitch);
-                    player.teleport(location);
-                } else {
-                    player.sendMessage("The world " + worldName + " does not exist.");
-                }
+
+    public void teleportToIftarLocation(Player player, String locationName) {
+        FileConfiguration config = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "iftardata.yml"));
+        if (config.contains("iftar-locations." + locationName)) {
+            ConfigurationSection locationConfig = config.getConfigurationSection("iftar-locations." + locationName);
+            String worldName = locationConfig.getString("world");
+            if (worldName != null && Bukkit.getWorld(worldName) != null) {
+                double x = locationConfig.getDouble("x");
+                double y = locationConfig.getDouble("y");
+                double z = locationConfig.getDouble("z");
+                float yaw = (float) locationConfig.getDouble("yaw");
+                float pitch = (float) locationConfig.getDouble("pitch");
+                World world = Bukkit.getWorld(worldName);
+                Location location = new Location(world, x, y, z, yaw, pitch);
+                player.teleport(location);
             } else {
-                player.sendMessage("The iftar location world name is null.");
+                player.sendMessage("The world specified for this location does not exist.");
             }
         } else {
-            player.sendMessage("No iftar location set.");
-        }
-    }
-    public Location getIftarLocation() {
-        FileConfiguration config = this.getConfig();
-        if (config.contains("iftar_location")) {
-            String worldName = config.getString("iftar_location.world");
-            double x = config.getDouble("iftar-location.x");
-            double y = config.getDouble("iftar-location.y");
-            double z = config.getDouble("iftar-location.z");
-            float yaw = (float) config.getDouble("iftar_location.yaw");
-            float pitch = (float) config.getDouble("iftar_location.pitch");
-            assert worldName != null;
-            return new Location(this.getServer().getWorld(worldName), x, y, z, yaw, pitch);
-        } else {
-            return null;
+            player.sendMessage("This location is not set.");
         }
     }
 
+    public Location getIftarLocation(String name) {
+        FileConfiguration config = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "iftardata.yml"));
+        ConfigurationSection locationConfig = config.getConfigurationSection("iftar-locations." + name);
+        if (locationConfig == null) {
+            // Handle error: Configuration section not found
+            return null;
+        }
+
+        String worldName = locationConfig.getString("world");
+        if (worldName == null || Bukkit.getWorld(worldName) == null) {
+            // Handle error: World not found
+            return null;
+        }
+
+        double x = locationConfig.getDouble("x");
+        double y = locationConfig.getDouble("y");
+        double z = locationConfig.getDouble("z");
+        float yaw = (float) locationConfig.getDouble("yaw");
+        float pitch = (float) locationConfig.getDouble("pitch");
+        World world = Bukkit.getWorld(worldName);
+        Location location = new Location(world, x, y, z, yaw, pitch);
+        return location;
+    }
 }

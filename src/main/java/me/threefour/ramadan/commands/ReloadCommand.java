@@ -1,8 +1,6 @@
 package me.threefour.ramadan.commands;
 
-import java.io.File;
-import java.io.IOException;
-
+import me.threefour.ramadan.Ramadan;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,13 +8,18 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
 
 public class ReloadCommand implements CommandExecutor {
 
-    private final Plugin plugin;
 
-    public ReloadCommand(Plugin plugin) {
-        this.plugin = plugin;
+    private final Ramadan plugin;
+
+    public ReloadCommand(Ramadan ramadan) {
+        this.plugin = ramadan;
     }
 
     @Override

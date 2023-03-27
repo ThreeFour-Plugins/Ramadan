@@ -38,7 +38,8 @@ public class Placeholders extends PlaceholderExpansion {
     public String onPlaceholderRequest(Player player, @NotNull String params) {
         if (params.equalsIgnoreCase("iftar_location")) {
             Ramadan plugin = (Ramadan) this.plugin;
-            Location iftarLocation = plugin.getIftarLocation();
+            String name = "";
+            Location iftarLocation = plugin.getIftarLocation(name);
             if (iftarLocation != null) {
                 return iftarLocation.getBlockX() + ", " + iftarLocation.getBlockY() + ", " + iftarLocation.getBlockZ();
             } else {

@@ -11,90 +11,126 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class IftarTableCommand implements CommandExecutor, TabCompleter {
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    private final Ramadan ramadan;
+    public IftarTableCommand(Ramadan ramadan) {
+        this.ramadan = ramadan;
+    }
+
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Only players can use this command.");
             return true;
         }
-
         if (!player.hasPermission("ramadan.iftar")) {
-            player.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            player.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
             return true;
         }
-
 
         if (args.length == 0) {
-            player.sendMessage("Usage: /iftar <set|tp|get>");
+            player.sendMessage("Unknown Command Use: /iftar help");
             return true;
         }
 
-        Ramadan plugin = new Ramadan();
+        Ramadan plugin = ramadan;
+
         if (args[0].equalsIgnoreCase("set")) {
-            if (args.length != 4) {
-                player.sendMessage("Usage: /iftar set <x> <y> <z>");
+            if (args.length != 5) {
+                player.sendMessage("Usage: /iftar set <name> <x> <y> <z>");
                 return true;
             }
+
             try {
-                double x = Double.parseDouble(args[1]);
-                double y = Double.parseDouble(args[2]);
-                double z = Double.parseDouble(args[3]);
+                String name = args[1];
+                double x = Double.parseDouble(args[2]);
+                double y = Double.parseDouble(args[3]);
+                double z = Double.parseDouble(args[4]);
                 Location location = new Location(player.getWorld(), x, y, z);
-                plugin.setIftarLocation(location);
-                player.sendMessage("Iftar location set to (" + x + ", " + y + ", " + z + ")");
+                plugin.setIftarLocation(name, location);
+                player.sendMessage("Iftar location for '" + name + "' set to (" + x + ", " + y + ", " + z + ")");
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
             } catch (NumberFormatException e) {
-                player.sendMessage("Invalid coordinates. Usage: /iftar set <x> <y> <z>");
+                player.sendMessage("Invalid coordinates. Usage: /iftar set <name> <x> <y> <z>");
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
             }
+
             return true;
+
         } else if (args[0].equalsIgnoreCase("tp")) {
-            plugin.teleportToIftarLocation(player);
+            if (args.length != 2) {
+                player.sendMessage("Usage: /iftar tp <name>");
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+                return true;
+            }
+
+            String name = args[1];
+            Location location = ramadan.getIftarLocation(name);
+
+            if (location == null) {
+                player.sendMessage("Iftar location for '" + name + "' has not been set.");
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+                return true;
+            }
+
+            player.teleport(location);
+            player.sendMessage("Teleported to Iftar location for '" + name + "'.");
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
             return true;
+
         } else if (args[0].equalsIgnoreCase("get")) {
-            ItemStack heldItem = player.getInventory().getItemInMainHand();
-            if (heldItem.getType() != Material.COMPASS) {
-                player.sendMessage("You need a compass to get the Iftar table location.");
+            if (args.length != 2) {
+                player.sendMessage("Usage: /iftar get <name>");
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                 return true;
             }
 
-            Location iftarLocation = plugin.getIftarLocation();
-            if (iftarLocation == null) {
-                player.sendMessage("Iftar table location has not been set.");
+            String name = args[1];
+            Location location = plugin.getIftarLocation(name);
+
+            if (location == null) {
+                player.sendMessage("Iftar location for '" + name + "' has not been set.");
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                 return true;
             }
 
-            ItemMeta compassMeta = heldItem.getItemMeta();
-            compassMeta.setDisplayName("IftarTableCompass");
-            compassMeta.setLore(Collections.singletonList("Points to the Iftar table location."));
-            heldItem.setItemMeta(compassMeta);
+            player.setCompassTarget(location);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
 
-            CompassMeta compassMeta1 = (CompassMeta) heldItem.getItemMeta();
-            compassMeta1.setLodestoneTracked(false);
-            compassMeta1.setLodestone(iftarLocation);
-            heldItem.setItemMeta(compassMeta1);
+            ItemStack mainHandItem = player.getInventory().getItemInMainHand();
 
-            player.sendMessage("The compass now points to the Iftar table location.");
+            if (mainHandItem.getType() == Material.COMPASS) {
+                ItemMeta compassMeta = mainHandItem.getItemMeta();
+                compassMeta.setDisplayName("Iftar Location");
+                mainHandItem.setItemMeta(compassMeta);
+                player.getInventory().setItemInMainHand(mainHandItem);
+            } else {
+                player.sendMessage("You need to hold a compass in your main hand to get the location");
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+            }
+
             return true;
-        }
 
-        return false;
+        } else if (args[0].equalsIgnoreCase("help")) {
+            player.sendMessage(ChatColor.GOLD + "----- Iftar Table Help -----");
+            player.sendMessage(ChatColor.YELLOW + "/iftar help - Shows this list of commands");
+            player.sendMessage(ChatColor.YELLOW + "/iftar set <name> <x> <y> <z> - Sets the location of an iftar spot with the given name at the specified coordinates");
+            player.sendMessage(ChatColor.YELLOW + "/iftar tp <name> - Teleports the player to the location of the iftar spot with the given name");
+            player.sendMessage(ChatColor.YELLOW + "/iftar get <name> - Sets the player's compass to point towards the location of the iftar spot with the given name");
+            return true;
+        } else {
+            player.sendMessage("You need to hold a compass in your main hand to get the location");
+        return true;
+        }
     }
-
-
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
+        List<String> completions = new ArrayList<>();
         if (args.length == 1) {
-            return Arrays.asList("set", "tp", "get");
+            completions.addAll(Arrays.asList("set", "tp", "get", "help"));
         }
-
-        return Collections.emptyList();
+        return completions;
     }
 }

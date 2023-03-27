@@ -16,23 +16,12 @@ commands:
     usage: /stopfasting
     permission: ramadan.stopfasting
     aliases: [ stopfast, sf ]
-  iftar:
-    description: Set, teleport to, or get the location of the Iftar table
-    usage: /iftar <set|tp|get>
-    permission: ramadan.iftar
-    permission-message: "You do not have permission to use this command."
-    aliases: [ iftartable ]
-  reload:
-    description: Reload the configuration files for the plugin
-    usage: /ramadan reload
-    permission: ramadan.reload
-    permission-message: "You do not have permission to use this command."
   ramadan:
     description: "Main command for the Ramadan plugin"
     usage: "/ramadan <subcommand>"
     permission: ramadan.reload
     permission-message: "You do not have permission to use this command."
-    executor: me.threefour.ramadan.commands.MainCommand
+    executor: me.threefour.ramadan.commands.ReloadCommand
     subcommands:
       reload:
         description: "Reload the configuration files for the plugin"
@@ -40,4 +29,25 @@ commands:
         permission: ramadan.reload
         permission-message: "You do not have permission to use this command."
         executor: me.threefour.ramadan.commands.ReloadCommand
+  iftar:
+    description: Set or teleport to the Iftar table location.
+    usage: /iftar <set|tp|get>
+    permission: ramadan.iftar
+    subcommands:
+      set:
+        description: Set the Iftar table location.
+        usage: /iftar set <x> <y> <z>
+        permission: ramadan.iftar
+      tp:
+        description: Teleport to the Iftar table location.
+        usage: /iftar tp
+        permission: ramadan.iftar
+      get:
+        description: Get the Iftar table location as a compass.
+        usage: /iftar get
+        permission: ramadan.iftar
+      help:
+        description: Get help on how to use the iftar command.
+        usage: /iftar help
+        permission: ramadan.iftar
 softdepend: [PlaceholderAPI]
